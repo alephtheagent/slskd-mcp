@@ -97,6 +97,8 @@ Search the Soulseek network for music files, albums, or artists. Polls until res
   - `max_results` (`int`, optional, default: `50`): Maximum ranked results to return.
   - `format_filter` (`str`, optional): File extension filter (e.g. `"flac"`, `"mp3"`).
   - `min_bitrate` (`int`, optional, default: `0`): Minimum bitrate threshold in kbps (e.g. `320`). Lossless audio (FLAC/WAV) is preserved.
+  - `exclude_locked` (`bool`, optional, default: `True`): Automatically exclude password-locked files and peers with closed/rejected transfers.
+  - `max_queue_length` (`int`, optional, default: `500`): Exclude peers whose queue exceeds this threshold. Set `None` to disable.
 - **Returns**: List of ranked file entries:
   ```json
   [
@@ -189,6 +191,42 @@ Browse shared directory structure of a Soulseek peer.
   - `username` (`str`, required): Peer username.
   - `directory` (`str`, optional): Specific remote directory path to list. If omitted, queries the peer's root library or returns share availability.
 - **Returns**: Directory listing containing files, sizes, bitrates, and track lengths.
+
+---
+
+### 7. `slskd_download_directory`
+Download an entire album or directory from a peer in a single batch request.
+
+- **Parameters**:
+  - `username` (`str`, required): Peer username.
+  - `directory` (`str`, required): Remote directory path as shared by the peer.
+  - `format_filter` (`str`, optional): Extension filter (e.g. `"flac"`, `"mp3"`).
+
+---
+
+### 8. `slskd_clear_transfers`
+Clear all completed, succeeded, or failed transfers from the download or upload transfer lists.
+
+- **Parameters**:
+  - `direction` (`str`, optional, default: `"downloads"`): `"downloads"` or `"uploads"`.
+
+---
+
+### 9. `slskd_get_me`
+Get detailed metrics and statistics for our own Soulseek account (`polymatic`).
+
+---
+
+### 10. `slskd_get_user_info`
+Fetch presence status, profile bio, free upload slots, and queue length for any Soulseek peer.
+
+- **Parameters**:
+  - `username` (`str`, required): Peer username.
+
+---
+
+### 11. `slskd_get_shares` & `slskd_rescan_shares`
+Inspect local shared folders (`/var/music/flac/main`, etc.) and trigger background library re-indexing.
 
 ---
 

@@ -34,6 +34,7 @@ class SearchResultFile(BaseModel):
     upload_speed: int = Field(default=0, description="Peer upload speed in bytes/sec")
     queue_length: int = Field(default=0, description="Peer download queue length")
     is_locked: bool = Field(default=False, description="Whether the file is locked by the peer")
+    is_rejected_peer: bool = Field(default=False, description="Whether peer has previously rejected transfers")
 
 
 class TransferFile(BaseModel):
@@ -51,10 +52,20 @@ class TransferFile(BaseModel):
     average_speed: float = Field(default=0.0, description="Transfer speed in bytes/sec")
     elapsed_time: Optional[str] = Field(default=None, description="Elapsed time duration string")
     remaining_time: Optional[str] = Field(default=None, description="Estimated remaining time string")
+    exception: Optional[str] = Field(default=None, description="Error or rejection exception details, if any")
+
+
+class RejectedPeer(BaseModel):
+    """Information about a peer known to have rejected transfers or inaccessible shares."""
+
+    username: str = Field(description="Peer username")
+    reason: str = Field(description="Reason for rejection or failure")
+    recorded_at: float = Field(description="Timestamp when rejection was recorded")
+    expires_at: float = Field(description="Timestamp when rejection cache entry expires")
 
 
 class DownloadResult(BaseModel):
-    """Result of enqueuing a download."""
+    """Result of enqueuing a single download."""
 
     success: bool = Field(description="Whether the file was successfully enqueued")
     username: str = Field(description="Soulseek username to download from")
@@ -62,6 +73,18 @@ class DownloadResult(BaseModel):
     size: int = Field(default=0, description="File size in bytes")
     status: str = Field(description="Status description (e.g. 'queued', 'started')")
     message: Optional[str] = Field(default=None, description="Additional status message or error details")
+
+
+class DirectoryDownloadResult(BaseModel):
+    """Result of enqueuing an entire directory / album for download."""
+
+    success: bool = Field(description="Whether directory download was enqueued")
+    username: str = Field(description="Peer username")
+    directory: str = Field(description="Directory path on peer's shares")
+    files_enqueued: int = Field(default=0, description="Count of files successfully enqueued")
+    total_size_mb: float = Field(default=0.0, description="Total size of enqueued files in megabytes")
+    files: List[str] = Field(default_factory=list, description="List of enqueued file names")
+    message: Optional[str] = Field(default=None, description="Status message")
 
 
 class CancelResult(BaseModel):
@@ -88,3 +111,39 @@ class DirectoryListing(BaseModel):
     name: str = Field(description="Directory name or path")
     file_count: int = Field(default=0, description="Number of files in directory")
     files: List[Dict[str, Any]] = Field(default_factory=list, description="Files in directory")
+
+
+class UserInfo(BaseModel):
+    """Information and presence status for a Soulseek peer."""
+
+    username: str = Field(description="Username")
+    presence: str = Field(default="Offline", description="User presence status (Online, Offline)")
+    description: Optional[str] = Field(default=None, description="User bio/description")
+    has_free_upload_slot: bool = Field(default=False, description="Whether peer currently has free upload slots")
+    queue_length: int = Field(default=0, description="Current upload queue length")
+    upload_slots: int = Field(default=0, description="Total upload slots")
+    is_privileged: bool = Field(default=False, description="Soulseek supporter / donor status")
+
+
+class AccountInfo(BaseModel):
+    """Information about our own local Soulseek account."""
+
+    username: str = Field(description="Soulseek username")
+    is_connected: bool = Field(description="Connection status")
+    is_logged_in: bool = Field(description="Login status")
+    is_privileged: bool = Field(default=False, description="Supporter status")
+    privileges_remaining: int = Field(default=0, description="Supporter days remaining")
+    average_speed: float = Field(default=0.0, description="Average upload speed in bytes/sec")
+    directory_count: int = Field(default=0, description="Total shared directories")
+    file_count: int = Field(default=0, description="Total shared files")
+    upload_count: int = Field(default=0, description="Total completed uploads")
+
+
+class SharesStatus(BaseModel):
+    """Information about local shared library folders and scan state."""
+
+    is_scanning: bool = Field(default=False, description="Whether share scan is currently in progress")
+    scan_progress: float = Field(default=1.0, description="Scan progress (0.0 - 1.0)")
+    directories_count: int = Field(default=0, description="Number of shared directories")
+    files_count: int = Field(default=0, description="Number of shared files")
+    shares: List[Dict[str, Any]] = Field(default_factory=list, description="Configured share roots")
